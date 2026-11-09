@@ -23,3 +23,10 @@ from .containers import Ciphertext, Plaintext
 __version__ = "0.1.0"
 
 __all__ = ["Context", "Parameters", "Ciphertext", "Plaintext", "__version__"]
+
+# Best-effort usage telemetry (opt-out via NPCKKS_DISABLE_TELEMETRY=1).
+# Runs on a background daemon thread and never raises, so it cannot affect
+# the import.
+from . import telemetry as _telemetry
+
+_telemetry.report()
