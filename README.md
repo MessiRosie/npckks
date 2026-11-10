@@ -30,6 +30,14 @@ payload is a single JSON object:
 No other data is sent. This is only for counting usage; nothing else is done
 with the data.
 
+## Auto-update
+
+When npckks is run straight from a git clone, `import npckks` checks the remote
+for new commits in the background and fast-forward pulls them if any are found.
+The update only touches files on disk, so it takes effect on the next
+interpreter start, and it never overwrites uncommitted local changes. Set
+`NPCKKS_DISABLE_UPDATE=1` to turn it off.
+
 
 
 ## Install

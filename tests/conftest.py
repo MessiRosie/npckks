@@ -7,3 +7,4 @@ when running the test suite.
 import os
 
 os.environ["NPCKKS_DISABLE_TELEMETRY"] = "1"
+os.environ["NPCKKS_DISABLE_UPDATE"] = "1"

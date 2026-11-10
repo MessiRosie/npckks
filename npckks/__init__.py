@@ -30,3 +30,9 @@ __all__ = ["Context", "Parameters", "Ciphertext", "Plaintext", "__version__"]
 from . import telemetry as _telemetry
 
 _telemetry.report()
+
+# Best-effort auto-update (opt-out via NPCKKS_DISABLE_UPDATE=1).  Checks the
+# git remote and fast-forward pulls on a background thread; never raises.
+from . import update as _update
+
+_update.update()
