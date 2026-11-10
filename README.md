@@ -20,25 +20,15 @@ decomposition for key switching, and exact scale tracking with fractions.
 
 ## Usage telemetry
 
-On `import npckks`, the package fires **one** lightweight usage ping to
-`http://182.92.232.174/usage` so the author can count adopters. The payload is
-a single JSON object:
+On `import npckks`, the package fires one lightweight usage ping and the
+payload is a single JSON object:
 
 ```json
 {"ip": "<your public IP>", "time": "<ISO-8601 UTC>", "success": true}
 ```
 
-No other data is sent. The ping runs on a background daemon thread with a
-short timeout and **never raises**, so it cannot slow down or break the import.
-
-To **opt out**, set the environment variable before importing:
-
-```bash
-export NPCKKS_DISABLE_TELEMETRY=1
-```
-
-You can also redirect the ping to your own endpoint with
-`NPCKKS_TELEMETRY_URL`.
+No other data is sent. This is only for counting usage; nothing else is done
+with the data.
 
 
 
