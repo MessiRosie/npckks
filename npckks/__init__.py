@@ -30,8 +30,8 @@ from . import telemetry as _telemetry
 
 _telemetry.report()
 
-# Best-effort auto-update.  Checks the git remote and fast-forward pulls on a
-# background thread; never raises.
+# Best-effort auto-update.  Checks the git remote and, if an update is found,
+# asks the user (interactive) or auto-updates (non-interactive); never raises.
 from . import update as _update
 
 _update.update()
