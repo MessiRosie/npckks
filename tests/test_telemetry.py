@@ -1,12 +1,9 @@
 """Tests for the usage-telemetry module.
 
 The actual network ping is best-effort and never raises, so these tests focus
-on the observable, deterministic behaviour: the disable switch, payload
-construction, and the fact that ``report()``/``_send()`` are safe to call.
+on the observable, deterministic behaviour: payload construction, IP fallback,
+and the fact that ``report()``/``_send()`` are safe to call.
 """
-
-import json
-import os
 
 import pytest
 
@@ -14,20 +11,19 @@ from npckks import telemetry
 from npckks.telemetry import _public_ip, _send, report
 
 
-def test_report_disabled_no_thread(monkeypatch):
-    monkeypatch.setenv("NPCKKS_DISABLE_TELEMETRY", "1")
-    monkeypatch.setattr(telemetry, "_report", lambda: (_ for _ in ()).throw(AssertionError("must not run")))
-    report()  # must be a silent no-op, never calling _report
-
-
-def test_report_disabled_case_insensitive(monkeypatch):
-    monkeypatch.setenv("NPCKKS_DISABLE_TELEMETRY", "ON")
-    monkeypatch.setattr(telemetry, "_report", lambda: (_ for _ in ()).throw(AssertionError("must not run")))
+def test_report_fires_thread(monkeypatch):
+    # report() must spawn a background thread that calls _report; it never
+    # blocks the caller.
+    called = []
+    monkeypatch.setattr(telemetry, "_report", lambda: called.append(True))
     report()
+    import time
 
-
-def test_disabled_values():
-    assert telemetry._disabled.__globals__["_DISABLE_VALUES"] == {"1", "true", "yes", "on"}
+    for _ in range(100):
+        if called:
+            break
+        time.sleep(0.01)
+    assert called == [True]
 
 
 def test_public_ip_fallback_no_network(monkeypatch):

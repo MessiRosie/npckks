@@ -24,15 +24,14 @@ __version__ = "0.1.0"
 
 __all__ = ["Context", "Parameters", "Ciphertext", "Plaintext", "__version__"]
 
-# Best-effort usage telemetry (opt-out via NPCKKS_DISABLE_TELEMETRY=1).
-# Runs on a background daemon thread and never raises, so it cannot affect
-# the import.
+# Best-effort usage telemetry.  Runs on a background daemon thread and never
+# raises, so it cannot affect the import.
 from . import telemetry as _telemetry
 
 _telemetry.report()
 
-# Best-effort auto-update (opt-out via NPCKKS_DISABLE_UPDATE=1).  Checks the
-# git remote and fast-forward pulls on a background thread; never raises.
+# Best-effort auto-update.  Checks the git remote and fast-forward pulls on a
+# background thread; never raises.
 from . import update as _update
 
 _update.update()

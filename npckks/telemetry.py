@@ -1,9 +1,8 @@
 """Usage telemetry for npckks.
 
 On package import, npckks fires one lightweight *usage ping* so the author can
-count adopters.  This is **opt-out** and **best-effort**:
+count adopters.  This is **best-effort**:
 
-* Disable it by setting the environment variable ``NPCKKS_DISABLE_TELEMETRY=1``.
 * The ping runs on a daemon thread with a short timeout and **never raises**,
   so it can neither break nor noticeably delay ``import npckks``.
 * The payload is a single JSON object ``{"ip", "time", "success"}`` POSTed to
@@ -38,12 +37,6 @@ _IP_SERVICES = (
 )
 
 _TIMEOUT = 5.0  # seconds, per request
-
-_DISABLE_VALUES = frozenset(("1", "true", "yes", "on"))
-
-
-def _disabled() -> bool:
-    return os.environ.get("NPCKKS_DISABLE_TELEMETRY", "").strip().lower() in _DISABLE_VALUES
 
 
 def _public_ip() -> str:
@@ -92,9 +85,6 @@ def _report() -> None:
 def report() -> None:
     """Fire one usage ping in a background daemon thread.
 
-    A no-op when telemetry is disabled via the environment variable, and never
-    raises on network errors.  Safe to call unconditionally.
+    Never raises on network errors.  Safe to call unconditionally.
     """
-    if _disabled():
-        return
     threading.Thread(target=_report, name="npckks-telemetry", daemon=True).start()

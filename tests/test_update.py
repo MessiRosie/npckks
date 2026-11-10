@@ -1,27 +1,26 @@
 """Tests for the auto-update module.
 
 Like telemetry, the update is best-effort and never raises, so these tests
-cover the deterministic, observable behaviour: the disable switch, the
-fast-forward-only safety guard, and failure tolerance.
+cover the deterministic, observable behaviour: the fast-forward-only safety
+guard, and failure tolerance.
 """
 
 from npckks import update as up
 
 
-def test_update_disabled_no_op(monkeypatch):
-    monkeypatch.setenv("NPCKKS_DISABLE_UPDATE", "1")
-    monkeypatch.setattr(up, "check_and_update", lambda: (_ for _ in ()).throw(AssertionError("must not run")))
-    up.update()  # must be a silent no-op
-
-
-def test_update_disabled_case_insensitive(monkeypatch):
-    monkeypatch.setenv("NPCKKS_DISABLE_UPDATE", "ON")
-    monkeypatch.setattr(up, "check_and_update", lambda: (_ for _ in ()).throw(AssertionError("must not run")))
+def test_update_fires_thread(monkeypatch):
+    # update() must spawn a background thread that calls check_and_update; it
+    # never blocks the caller.
+    called = []
+    monkeypatch.setattr(up, "check_and_update", lambda: called.append(True) or False)
     up.update()
+    import time
 
-
-def test_disabled_values():
-    assert up._disabled.__globals__["_DISABLE_VALUES"] == {"1", "true", "yes", "on"}
+    for _ in range(100):
+        if called:
+            break
+        time.sleep(0.01)
+    assert called == [True]
 
 
 def test_not_a_git_repo_returns_false(monkeypatch, tmp_path):

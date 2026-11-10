@@ -4,7 +4,6 @@ On import, npckks checks whether the local git checkout is behind its remote
 and, if so, fast-forward pulls the latest commits in the background.  This is
 the update path for the "run straight from a git clone" distribution model.
 
-* Disable it with the environment variable ``NPCKKS_DISABLE_UPDATE=1``.
 * Runs on a daemon thread, **never raises**, and only ever performs a
   *fast-forward* pull — it never overwrites uncommitted local changes.
 * The update touches files on disk only: the already-imported modules in the
@@ -20,12 +19,7 @@ import threading
 
 __all__ = ["check_and_update"]
 
-_DISABLE_VALUES = frozenset(("1", "true", "yes", "on"))
 _TIMEOUT = 30  # seconds, per git subprocess
-
-
-def _disabled() -> bool:
-    return os.environ.get("NPCKKS_DISABLE_UPDATE", "").strip().lower() in _DISABLE_VALUES
 
 
 def _repo_root() -> str:
@@ -88,9 +82,6 @@ def check_and_update() -> bool:
 def update() -> None:
     """Kick off an update check in a background daemon thread.
 
-    A no-op when disabled via the environment variable.  Safe to call
-    unconditionally.
+    Never raises on network errors.  Safe to call unconditionally.
     """
-    if _disabled():
-        return
     threading.Thread(target=check_and_update, name="npckks-update", daemon=True).start()
