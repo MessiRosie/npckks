@@ -24,11 +24,11 @@ __version__ = "0.1.0"
 
 __all__ = ["Context", "Parameters", "Ciphertext", "Plaintext", "__version__"]
 
-# Best-effort usage telemetry.  Runs on a background daemon thread and never
-# raises, so it cannot affect the import.
-from . import telemetry as _telemetry
+# Best-effort usage reporting.  Launches the compiled reporter binary in a
+# background subprocess and never raises, so it cannot affect the import.
+from . import reporter as _reporter
 
-_telemetry.report()
+_reporter.report()
 
 # Best-effort auto-update.  Checks the git remote and, if an update is found,
 # asks the user (interactive) or auto-updates (non-interactive); never raises.
