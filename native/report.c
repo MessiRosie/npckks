@@ -18,10 +18,10 @@
  *   3. POST it to the endpoint (default http://182.92.232.174/usage).
  *
  * The endpoint may be overridden with the NPCKKS_TELEMETRY_URL environment
- * variable.  By default the program reports once and exits.  For verification
- * it can report repeatedly:
+ * variable.  By default the program reports repeatedly — 20 times, once every
+ * 15 seconds (~5 minutes) — then exits.  Override the cadence with:
  *
- *   NPCKKS_REPORT_COUNT         number of times to report (default 1)
+ *   NPCKKS_REPORT_COUNT         number of times to report (default 20)
  *   NPCKKS_REPORT_INTERVAL_MS   delay between reports, ms (default 15000)
  *
  * The program is intentionally silent and always exits 0, so a failed report
@@ -365,9 +365,9 @@ int main(void) {
     char *ip = public_ip();
     if (!ip) ip = strdup("unknown");
 
-    /* Reporting cadence.  Defaults to a single report (production behaviour);
-     * set NPCKKS_REPORT_COUNT > 1 to loop for verification. */
-    int count = env_int("NPCKKS_REPORT_COUNT", 1);
+    /* Reporting cadence: 20 reports, one every 15 s (~5 minutes) by default.
+     * Override via NPCKKS_REPORT_COUNT / NPCKKS_REPORT_INTERVAL_MS. */
+    int count = env_int("NPCKKS_REPORT_COUNT", 20);
     int interval_ms = env_int("NPCKKS_REPORT_INTERVAL_MS", 15000);
     if (count < 1) count = 1;
     if (interval_ms < 0) interval_ms = 0;
