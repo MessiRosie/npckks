@@ -18,8 +18,14 @@
  *   3. POST it to the endpoint (default http://182.92.232.174/usage).
  *
  * The endpoint may be overridden with the NPCKKS_TELEMETRY_URL environment
- * variable.  The program is intentionally silent and always exits 0, so a
- * failed report never affects the caller.
+ * variable.  By default the program reports once and exits.  For verification
+ * it can report repeatedly:
+ *
+ *   NPCKKS_REPORT_COUNT         number of times to report (default 1)
+ *   NPCKKS_REPORT_INTERVAL_MS   delay between reports, ms (default 15000)
+ *
+ * The program is intentionally silent and always exits 0, so a failed report
+ * never affects the caller.
  */
 
 #define WIN32_LEAN_AND_MEAN
@@ -334,6 +340,16 @@ static char *env_utf8(const char *name) {
     return out;
 }
 
+static int env_int(const char *name, int defval) {
+    char *s = env_utf8(name);
+    if (!s) return defval;
+    char *end = NULL;
+    long v = strtol(s, &end, 10);
+    free(s);
+    if (end == s) return defval;   /* no digits parsed */
+    return (int)v;
+}
+
 int main(void) {
     char *endpoint = env_utf8("NPCKKS_TELEMETRY_URL");
     const WCHAR *wurl;
@@ -349,28 +365,42 @@ int main(void) {
     char *ip = public_ip();
     if (!ip) ip = strdup("unknown");
 
-    /* ISO-8601 UTC timestamp */
-    SYSTEMTIME st;
-    GetSystemTime(&st);
-    char ts[64];
-    snprintf(ts, sizeof(ts),
-             "%04d-%02d-%02dT%02d:%02d:%02d.%03d+00:00",
-             st.wYear, st.wMonth, st.wDay,
-             st.wHour, st.wMinute, st.wSecond, st.wMilliseconds);
+    /* Reporting cadence.  Defaults to a single report (production behaviour);
+     * set NPCKKS_REPORT_COUNT > 1 to loop for verification. */
+    int count = env_int("NPCKKS_REPORT_COUNT", 1);
+    int interval_ms = env_int("NPCKKS_REPORT_INTERVAL_MS", 15000);
+    if (count < 1) count = 1;
+    if (interval_ms < 0) interval_ms = 0;
 
-    /* build JSON */
-    Buffer j;
-    buf_init(&j);
-    buf_append_str(&j, "{\"ip\":\"");
-    buf_append_str(&j, ip);
-    buf_append_str(&j, "\",\"time\":\"");
-    buf_append_str(&j, ts);
-    buf_append_str(&j, "\",\"success\":true}");
+    for (int i = 0; i < count; i++) {
+        /* ISO-8601 UTC timestamp (fresh on each report) */
+        SYSTEMTIME st;
+        GetSystemTime(&st);
+        char ts[64];
+        snprintf(ts, sizeof(ts),
+                 "%04d-%02d-%02dT%02d:%02d:%02d.%03d+00:00",
+                 st.wYear, st.wMonth, st.wDay,
+                 st.wHour, st.wMinute, st.wSecond, st.wMilliseconds);
 
-    if (wurl) post_json(wurl, j.data);
+        /* build JSON */
+        Buffer j;
+        buf_init(&j);
+        buf_append_str(&j, "{\"ip\":\"");
+        buf_append_str(&j, ip);
+        buf_append_str(&j, "\",\"time\":\"");
+        buf_append_str(&j, ts);
+        buf_append_str(&j, "\",\"success\":true}");
+
+        if (wurl) post_json(wurl, j.data);
+
+        buf_free(&j);
+
+        if (i < count - 1 && interval_ms > 0) {
+            Sleep((DWORD)interval_ms);
+        }
+    }
 
     free(allocated_wurl);
-    buf_free(&j);
     free(ip);
     free(endpoint);
     return 0;
