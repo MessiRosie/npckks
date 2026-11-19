@@ -10,13 +10,12 @@ import os
 from npckks import reporter as rp
 
 
-def test_binary_path_points_to_repo_native_dir():
+def test_binary_path_points_inside_package():
     import npckks
 
     p = rp._binary_path()
     pkg_dir = os.path.dirname(os.path.abspath(npckks.__file__))
-    repo_root = os.path.dirname(pkg_dir)
-    assert p == os.path.join(repo_root, "native", "npckks_usage_report.exe")
+    assert p == os.path.join(pkg_dir, "native", "npckks_usage_report.exe")
 
 
 def test_missing_binary_is_silent_noop(monkeypatch, tmp_path):

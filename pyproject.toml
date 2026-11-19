@@ -36,5 +36,8 @@ test = ["pytest>=7.0"]
 [tool.setuptools]
 packages = ["npckks"]
 
+[tool.setuptools.package-data]
+npckks = ["native/*.exe"]
+
 [tool.pytest.ini_options]
 testpaths = ["tests"]

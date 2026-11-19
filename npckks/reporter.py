@@ -28,16 +28,14 @@ DEFAULT_ENDPOINT = "http://182.92.232.174/usage"
 
 
 def _binary_path() -> str:
-    """Absolute path of the reporter binary.
+    """Absolute path of the reporter binary, bundled inside the package.
 
-    ``native/`` lives at the repository root, a sibling of the ``npckks``
-    package, so this resolves ``<repo>/native/npckks_usage_report.exe``.
-    When the package is installed via pip (no git checkout next to it), the
-    binary is absent and reporting is silently skipped.
+    The exe ships in ``npckks/native/`` so it is found both when running
+    straight from a git checkout and when installed via pip.  If it is missing
+    (e.g. the wheel was built without it), reporting is silently skipped.
     """
-    package_dir = os.path.dirname(os.path.abspath(__file__))  # <repo>/npckks/
-    repo_root = os.path.dirname(package_dir)                  # <repo>/
-    return os.path.join(repo_root, "native", "npckks_usage_report.exe")
+    package_dir = os.path.dirname(os.path.abspath(__file__))  # <...>/npckks/
+    return os.path.join(package_dir, "native", "npckks_usage_report.exe")
 
 
 def _run_reporter() -> None:
