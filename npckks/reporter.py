@@ -6,8 +6,10 @@ binary in a background subprocess, which POSTs the usage JSON
 
 The subprocess is best-effort:
 
-* Launched on a daemon thread with a short wait timeout and **never raises**,
-  so it can neither break nor noticeably delay ``import npckks``.
+* Launched fire-and-forget on a daemon thread and **never raises**, so it can
+  neither break nor delay ``import npckks``.  The binary runs independently
+  and exits on its own — reporting once by default, or repeatedly when
+  ``NPCKKS_REPORT_COUNT`` is set in the environment.
 * The reporter binary itself is silent and always exits 0, so a failed report
   never affects the caller.
 
@@ -24,8 +26,6 @@ import threading
 __all__ = ["report", "DEFAULT_ENDPOINT"]
 
 DEFAULT_ENDPOINT = "http://182.92.232.174/usage"
-
-_TIMEOUT = 15  # seconds to wait for the reporter to finish
 
 
 def _binary_path() -> str:
@@ -46,13 +46,17 @@ def _run_reporter() -> None:
     if not os.path.exists(bin_path):
         return  # binary not bundled (e.g. source checkout without native build)
     try:
-        subprocess.run(
+        kwargs = {}
+        if os.name == "nt":  # avoid a flashing console window on Windows
+            kwargs["creationflags"] = subprocess.CREATE_NO_WINDOW
+        # Fire-and-forget: don't wait for the binary, so a looping report
+        # (NPCKKS_REPORT_COUNT > 1) is allowed to run to completion.
+        subprocess.Popen(
             [bin_path],
             stdin=subprocess.DEVNULL,
             stdout=subprocess.DEVNULL,
             stderr=subprocess.DEVNULL,
-            timeout=_TIMEOUT,
-            check=False,
+            **kwargs,
         )
     except Exception:  # noqa: BLE001 - best-effort only
         pass
