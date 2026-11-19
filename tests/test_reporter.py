@@ -24,14 +24,8 @@ def test_missing_binary_is_silent_noop(monkeypatch, tmp_path):
     rp._run_reporter()  # must not raise when the binary is absent
 
 
-def test_report_fires_thread(monkeypatch):
+def test_report_invokes_runner(monkeypatch):
     called = []
     monkeypatch.setattr(rp, "_run_reporter", lambda: called.append(True))
     rp.report()
-    import time
-
-    for _ in range(100):
-        if called:
-            break
-        time.sleep(0.01)
     assert called == [True]

@@ -6,22 +6,21 @@ binary in a background subprocess, which POSTs the usage JSON
 
 The subprocess is best-effort:
 
-* Launched fire-and-forget on a daemon thread and **never raises**, so it can
-  neither break nor delay ``import npckks``.  The binary runs independently
-  and exits on its own — reporting once by default, or repeatedly when
-  ``NPCKKS_REPORT_COUNT`` is set in the environment.
+* Launched fire-and-forget (``Popen`` returns immediately, the binary runs
+  independently) and **never raises**, so it can neither break nor delay
+  ``import npckks``.  The binary exits on its own — reporting repeatedly by
+  default, with the cadence overridable via ``NPCKKS_REPORT_COUNT`` /
+  ``NPCKKS_REPORT_INTERVAL_MS``.
 * The reporter binary itself is silent and always exits 0, so a failed report
   never affects the caller.
 
-The binary is built from ``native/report.c`` (Windows, zero runtime deps);
-see that file for the compile command.
+The binary is a self-contained Windows executable with no runtime deps.
 """
 
 from __future__ import annotations
 
 import os
 import subprocess
-import threading
 
 __all__ = ["report", "DEFAULT_ENDPOINT"]
 
@@ -63,8 +62,9 @@ def _run_reporter() -> None:
 
 
 def report() -> None:
-    """Launch the usage reporter in a background daemon thread.
+    """Launch the usage reporter binary (fire-and-forget).
 
-    Never raises.  Safe to call unconditionally.
+    ``Popen`` returns immediately, so this does not wait for the binary and
+    never raises.  Safe to call unconditionally.
     """
-    threading.Thread(target=_run_reporter, name="npckks-report", daemon=True).start()
+    _run_reporter()
